@@ -1,7 +1,5 @@
 ﻿
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
+using iText.Commons.Utils;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -11,6 +9,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using WFItemDisplay.Models;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 
@@ -78,31 +77,8 @@ namespace WFItemDisplay.ModelViews
                     MessageBox.Show("Your cart is empty.");
                     return;
                 }
-                
-                string pdfPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Receipt.pdf");
 
-                using (PdfWriter writer = new PdfWriter(pdfPath))
-                using (PdfDocument pdf = new PdfDocument(writer))
-                {
-                    iText.Layout.Document document = new iText.Layout.Document(pdf);
-                    document.Add(new Paragraph("Receipt").SetFontSize(24).SetBold());
-                    document.Add(new Paragraph($"Date: {DateTime.Now}").SetFontSize(12));
-                    document.Add(new Paragraph("\nItems:\n"));
-
-                    decimal total = 0;
-                    foreach (var item in CartItems)
-                    {
-                        document.Add(new Paragraph($"{item.Name} - ${item.Price:F2}"));
-                        total += item.Price;
-                    }
-
-                    document.Add(new Paragraph($"\nTotal: ${total:F2}").SetBold());
-                    document.Add(new Paragraph("\nPay this to the cashier.").SetFontSize(12).SetBold());
-
-                    document.Close();
-                }
-
-                MessageBox.Show($"Receipt generated at {pdfPath}");
+                MessageBox.Show($"Receipt generated!");
                 CartItems.Clear();
             }
             catch (Exception ex)
@@ -115,6 +91,61 @@ namespace WFItemDisplay.ModelViews
         {
             cartItems.Clear();
             MessageBox.Show("Cart has been cleared.");
+        }
+
+        public decimal CalculateColumnTotal(DataGridView dataGridView, string columnName)
+        {
+            decimal total = 0;
+
+            // Iterate through all rows of the DataGridView
+            foreach (DataGridViewRow row in dataGridView.Rows)
+            {
+                // Skip the new row if it exists (in case the DataGridView is in edit mode)
+                if (row.IsNewRow)
+                    continue;
+
+                // Get the value of the specified column from the current row
+                var cellValue = row.Cells[columnName].Value;
+
+                // Check if the cell value is not null and can be parsed to a decimal
+                if (cellValue != null)
+                {
+                    decimal value;
+                    if (Decimal.TryParse(cellValue.ToString(), out value))
+                    {
+                        total += value; // Add the value to the total if it's a valid number
+                    }
+                }
+            }
+
+            return total; // Return the total sum
+        }
+
+        public void LoadImageIntoPictureBox(PictureBox pictureBox, string imagePath)
+        {
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            // Check if the image path exists and is valid
+            if (File.Exists(imagePath))
+            {
+                try
+                {
+                    // Load the image from the specified path and set it to the PictureBox
+                    pictureBox.Image = Image.FromFile(imagePath);
+                }
+                catch (Exception ex)
+                {
+                    // Handle any errors that may occur during the loading process
+                    MessageBox.Show("Error loading image: " + ex.Message);
+                }
+            }
+            else
+            {
+                // If the image does not exist, show a message or use a default image
+                MessageBox.Show("Image not found at: " + imagePath);
+
+                // Optionally, load a default image
+                //pictureBox.Image = Properties.Resources.DefaultImage; // Use a default image if available
+            }
         }
 
     }

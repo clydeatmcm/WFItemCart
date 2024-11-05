@@ -1,4 +1,5 @@
-﻿using System;
+﻿using iText.IO.Image;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -22,6 +23,7 @@ namespace WFItemDisplay.Views
             InitializeComponent();
             viewModel = new ItemMV();
             LoadData();
+
         }
         private void LoadData()
         {
@@ -68,6 +70,7 @@ namespace WFItemDisplay.Views
 
             // Update the cart DataGridView as well
             dataGridViewCart.DataSource = viewModel.CartItems.ToList();
+            lblTotal.Text = viewModel.CalculateColumnTotal(dataGridViewCart, "Price").ToString();
         }
 
         private void btnAddToCart_Click(object sender, EventArgs e)
@@ -88,6 +91,24 @@ namespace WFItemDisplay.Views
         {
             viewModel.Checkout();
             LoadData();
+        }
+
+        private void dataGridViewItems_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dataGridViewItems.SelectedRows.Count > 0)
+            {
+                DataGridViewRow selectedRow = dataGridViewItems.SelectedRows[0];
+                string imagePath = selectedRow.Cells["ImagePath"].Value?.ToString();
+
+                // Check if the image path is not null or empty
+                if (!string.IsNullOrEmpty(imagePath))
+                {
+                    // Load the image into the PictureBox
+                    viewModel.LoadImageIntoPictureBox(pictureBoxItem, imagePath);  // Assuming you have a PictureBox named pictureBox1
+                }
+
+                lblItemID.Text = selectedRow.Cells["Id"].Value.ToString();
+            }
         }
     }
 }
